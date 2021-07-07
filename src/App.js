@@ -1,4 +1,3 @@
-import logo from "./logo.svg";
 import "./App.css";
 import firebase from "firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -89,7 +88,7 @@ function ScoreState({ game, user, activeTask, members }) {
         {revealed ? (
           <>
             Average:{" "}
-            {average(Object.values(scoreData).filter((score) => score != "?"))}
+            {average(Object.values(scoreData).filter((score) => score !== "?"))}
           </>
         ) : (
           <>
@@ -145,7 +144,7 @@ export function Game({ user }) {
               onChange={(event) => setNewTask(event.value)}
               value={newTask}
               onKeyPress={async (e) => {
-                if (e.key == "Enter") {
+                if (e.key === "Enter") {
                   await gameDoc.collection("tasks").add({
                     name: e.currentTarget.value,
                     revealed: false,
@@ -261,7 +260,7 @@ export function Game({ user }) {
 }
 
 function App() {
-  const [user, loading, error] = useAuthState(firebase.auth());
+  const [user] = useAuthState(firebase.auth());
   const gameId = window.location.search
     ? window.location.search.slice(1)
     : null;
