@@ -17,7 +17,8 @@ const uiConfig = {
 
 export function LoggedOutTemplate() {
   return (
-    <div css={{ marginTop: "50vh", transform: "translateY(-50%)" }}>
+    <div style={{ marginTop: "50vh", transform: "translateY(-100%)" }}>
+      <h1>Planning Poker</h1>
       <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={firebase.auth()} />
     </div>
   );
@@ -45,14 +46,17 @@ export function CreateGameForm({ user }) {
     firebase.firestore().collection("game").orderBy("created", "desc").limit(10)
   );
   return (
-    <div>
+    <div style={{ margin: "auto" }}>
       <h1>Welcome, {user.displayName}!</h1>
       <button onClick={() => createGame(user)}>Start a new game</button>
       <h2>Join Game</h2>
       <div>
         {games
           ? games.docs.map((game) => (
-              <div onClick={() => (window.location.search = game.id)}>
+              <div
+                onClick={() => (window.location.search = game.id)}
+                className="GameEntry"
+              >
                 {game.data().name} (
                 {game.data().created.toDate().toLocaleString()})
               </div>
@@ -77,20 +81,34 @@ function ScoreState({ game, user, activeTask, members, scores }) {
     return;
   }
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "20vw" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "20vw",
+        fontSize: "18px",
+      }}
+    >
       <div>
         {members.docs.map((doc) => {
           const isMe = user.uid === doc.id;
           return (
-            <div style={isMe ? { fontWeight: "bold" } : {}}>
-              {doc.data().name}{" "}
-              {isMe && scoreData
-                ? scoreData[user.uid]
-                : revealed
-                ? scoreData[doc.id]
-                : scoreData[doc.id]
-                ? "✔️"
-                : ""}
+            <div
+              style={{
+                ...(isMe ? { fontWeight: "bold" } : {}),
+                ...{ margin: "8px 12px", display: "flex" },
+              }}
+            >
+              <div style={{ marginRight: "auto" }}>{doc.data().name} </div>
+              <div>
+                {isMe && scoreData
+                  ? scoreData[user.uid]
+                  : revealed
+                  ? scoreData[doc.id]
+                  : scoreData[doc.id]
+                  ? "✔️"
+                  : ""}
+              </div>
             </div>
           );
         })}
@@ -147,7 +165,7 @@ export function Game({ user }) {
   console.log(ticket);
   if (members.docs.find((doc) => doc.id === user.uid)) {
     return (
-      <div style={{ display: "flex" }}>
+      <div style={{ display: "flex", backgroundColor: "#f0f0f0" }}>
         <div style={{ width: "20vw" }}>
           <h1>Tasks</h1>
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -162,6 +180,7 @@ export function Game({ user }) {
                     onClick={() => {
                       game.ref.set({ activeTask: doc.id }, { merge: true });
                     }}
+                    className="TaskEntry"
                   >
                     {doc.data().name}
                   </div>
@@ -183,15 +202,14 @@ export function Game({ user }) {
               }}
             ></input>
             {document.phabricatorGetEpic ? (
-              <div>
-                <input
-                  placeholder="Ticket"
-                  value={ticket}
-                  onChange={(e) => setTicket(e.currentTarget.value)}
-                ></input>
-                <button
-                  onClick={async () => {
-                    console.log(ticket);
+              <input
+                placeholder="Ticket"
+                value={ticket}
+                onChange={(e) => setTicket(e.currentTarget.value)}
+                pattern="T\d+"
+                type="text"
+                onKeyPress={async (e) => {
+                  if (e.key === "Enter" && e.currentTarget.checkValidity()) {
                     const tickets = await document.phabricatorGetEpic(ticket);
                     let idx = tasks.docs.length;
                     for (const t of tickets) {
@@ -202,11 +220,9 @@ export function Game({ user }) {
                       });
                     }
                     setTicket("");
-                  }}
-                >
-                  Load Epic
-                </button>
-              </div>
+                  }
+                }}
+              ></input>
             ) : null}
           </div>
         </div>
@@ -215,30 +231,41 @@ export function Game({ user }) {
             display: "flex",
             flexDirection: "column",
             width: "60vw",
+            background: "white",
+            height: "auto",
           }}
         >
           {activeTask ? (
             <>
-              <h1>{activeTask.data().name}</h1>
-              <div>
-                {[...game.data().deck, "?"].map((card) => (
-                  <button
-                    className="Card"
-                    onClick={() => {
-                      game.ref
-                        .collection("scores")
-                        .doc(activeTaskId)
-                        .set(
-                          {
-                            [user.uid]: card,
-                          },
-                          { merge: true }
-                        );
-                    }}
-                  >
-                    {card}
-                  </button>
-                ))}
+              <h1 style={{ padding: "38px" }}>{activeTask.data().name}</h1>
+              <div style={{ margin: "32px" }}>
+                {[...game.data().deck, "?"].map((card) => {
+                  console.log({ card, data: scores?.data() });
+                  return (
+                    <button
+                      className={`Card ${
+                        scores &&
+                        scores.data() &&
+                        card === scores.data()[user.uid]
+                          ? "SelectedCard"
+                          : ""
+                      }`}
+                      onClick={() => {
+                        game.ref
+                          .collection("scores")
+                          .doc(activeTaskId)
+                          .set(
+                            {
+                              [user.uid]: card,
+                            },
+                            { merge: true }
+                          );
+                      }}
+                    >
+                      {card}
+                    </button>
+                  );
+                })}
               </div>
               <div>
                 {activeTask.data().revealed &&
@@ -251,6 +278,7 @@ export function Game({ user }) {
                           { merge: true }
                         );
                       }}
+                      className="Secondary"
                     >
                       Hide
                     </button>
@@ -276,6 +304,7 @@ export function Game({ user }) {
                           { merge: true }
                         );
                       }}
+                      className="Secondary"
                     >
                       Skip
                     </button>
@@ -283,13 +312,15 @@ export function Game({ user }) {
                       onClick={() => {
                         activeTask.ref.set({ revealed: true }, { merge: true });
                         setPoints(
-                          Math.round(
-                            average(
-                              Object.values(scores.data()).filter(
-                                (score) => score !== "?"
+                          scores
+                            ? Math.round(
+                                average(
+                                  Object.values(scores.data()).filter(
+                                    (score) => score !== "?"
+                                  )
+                                )
                               )
-                            )
-                          )
+                            : 0
                         );
                       }}
                     >
@@ -300,7 +331,7 @@ export function Game({ user }) {
                 {document.phabricatorSetPoints &&
                 activeTask &&
                 activeTask.data().name.match(/^T\d+/) ? (
-                  <div>
+                  <div style={{ marginTop: "32px" }}>
                     <input
                       placeholder="Points"
                       value={points}
@@ -315,6 +346,7 @@ export function Game({ user }) {
                         await document.phabricatorSetPoints(ticketId, p);
                         setPoints("");
                       }}
+                      className="InputButton"
                     >
                       Set Points
                     </button>
@@ -346,15 +378,23 @@ export function Game({ user }) {
     );
   } else {
     return (
-      <button
-        onClick={() =>
-          gameDoc.collection("members").doc(user.uid).set({
-            name: user.displayName,
-          })
-        }
+      <div
+        style={{
+          display: "flex",
+          minHeight: "100vh",
+        }}
       >
-        Join Session
-      </button>
+        <button
+          onClick={() =>
+            gameDoc.collection("members").doc(user.uid).set({
+              name: user.displayName,
+            })
+          }
+          style={{ transform: "translateY(-100%)", margin: "auto" }}
+        >
+          Join Session
+        </button>
+      </div>
     );
   }
 }
@@ -366,17 +406,15 @@ function App() {
     : null;
   return (
     <div className="App">
-      <header className="App-header">
-        {user ? (
-          gameId ? (
-            <Game id={gameId} user={user} />
-          ) : (
-            <CreateGameForm user={user} />
-          )
+      {user ? (
+        gameId ? (
+          <Game id={gameId} user={user} />
         ) : (
-          <LoggedOutTemplate />
-        )}
-      </header>
+          <CreateGameForm user={user} />
+        )
+      ) : (
+        <LoggedOutTemplate />
+      )}
     </div>
   );
 }
