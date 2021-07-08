@@ -247,33 +247,36 @@ export function Game({ user }) {
             <>
               <h1 style={{ padding: "38px" }}>{activeTask.data().name}</h1>
               <div style={{ margin: "32px" }}>
-                {[...game.data().deck, "?"].map((card) => {
-                  console.log({ card, data: scores?.data() });
-                  return (
-                    <button
-                      className={`Card ${
-                        scores &&
-                        scores.data() &&
-                        card === scores.data()[user.uid]
-                          ? "SelectedCard"
-                          : ""
-                      }`}
-                      onClick={() => {
-                        game.ref
-                          .collection("scores")
-                          .doc(activeTaskId)
-                          .set(
-                            {
-                              [user.uid]: card,
-                            },
-                            { merge: true }
-                          );
-                      }}
-                    >
-                      {card}
-                    </button>
-                  );
-                })}
+                {game.data().deck && false ? (
+                  [...game.data().deck, "?"].map((card) => {
+                    return (
+                      <button
+                        className={`Card ${
+                          scores &&
+                          scores.data() &&
+                          card === scores.data()[user.uid]
+                            ? "SelectedCard"
+                            : ""
+                        }`}
+                        onClick={() => {
+                          game.ref
+                            .collection("scores")
+                            .doc(activeTaskId)
+                            .set(
+                              {
+                                [user.uid]: card,
+                              },
+                              { merge: true }
+                            );
+                        }}
+                      >
+                        {card}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <input placeholder="Score" pattern="\d+"></input>
+                )}
               </div>
               <div>
                 {activeTask.data().revealed &&
@@ -407,6 +410,31 @@ export function Game({ user }) {
   }
 }
 
+function Interface({ id, user }) {
+  const settingsDoc = firebase.firestore().collection("settings").doc(user.uid);
+  const [settings] = useCollection(settingsDoc);
+  const darkMode = settings?.data()?.darkMode;
+  return (
+    <div
+      style={{
+        ...(darkMode ? { filter: "invert(0.95)" } : {}),
+        ...{ display: "flex", flexGrow: 1 },
+      }}
+    >
+      {id ? <Game id={id} user={user} /> : <CreateGameForm user={user} />}
+      <button
+        className="Secondary"
+        style={{ position: "absolute", right: 0, bottom: 0, color: "grey" }}
+        onClick={() => {
+          settingsDoc.set({ darkMode: !darkMode }, { merge: true });
+        }}
+      >
+        {darkMode ? "Light Mode" : "Dark Mode"}
+      </button>
+    </div>
+  );
+}
+
 function App() {
   const [user] = useAuthState(firebase.auth());
   const gameId = window.location.search
@@ -414,15 +442,7 @@ function App() {
     : null;
   return (
     <div className="App">
-      {user ? (
-        gameId ? (
-          <Game id={gameId} user={user} />
-        ) : (
-          <CreateGameForm user={user} />
-        )
-      ) : (
-        <LoggedOutTemplate />
-      )}
+      {user ? <Interface id={gameId} user={user} /> : <LoggedOutTemplate />}
     </div>
   );
 }
