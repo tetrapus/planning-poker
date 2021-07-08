@@ -41,10 +41,24 @@ async function createGame(user) {
 }
 
 export function CreateGameForm({ user }) {
+  const [games] = useCollection(
+    firebase.firestore().collection("game").orderBy("created", "desc").limit(10)
+  );
   return (
     <div>
       <h1>Welcome, {user.displayName}!</h1>
       <button onClick={() => createGame(user)}>Start a new game</button>
+      <h2>Join Game</h2>
+      <div>
+        {games
+          ? games.docs.map((game) => (
+              <div onClick={() => (window.location.search = game.id)}>
+                {game.data().name} (
+                {game.data().created.toDate().toLocaleString()})
+              </div>
+            ))
+          : null}
+      </div>
     </div>
   );
 }
