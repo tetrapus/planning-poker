@@ -247,7 +247,7 @@ export function Game({ user }) {
             <>
               <h1 style={{ padding: "38px" }}>{activeTask.data().name}</h1>
               <div style={{ margin: "32px" }}>
-                {game.data().deck && false ? (
+                {game.data().deck ? (
                   [...game.data().deck, "?"].map((card) => {
                     return (
                       <button
