@@ -17,7 +17,14 @@ const uiConfig = {
 
 export function LoggedOutTemplate() {
   return (
-    <div style={{ marginTop: "50vh", transform: "translateY(-100%)" }}>
+    <div
+      style={{
+        marginTop: "50vh",
+        transform: "translateY(-100%)",
+        flexGrow: 1,
+        margin: "auto",
+      }}
+    >
       <h1>Planning Poker</h1>
       <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={firebase.auth()} />
     </div>
@@ -190,6 +197,7 @@ export function Game({ user }) {
               placeholder="+ Add Task"
               onChange={(event) => setNewTask(event.value)}
               value={newTask}
+              style={{ marginTop: 16 }}
               onKeyPress={async (e) => {
                 if (e.key === "Enter") {
                   await gameDoc.collection("tasks").add({
