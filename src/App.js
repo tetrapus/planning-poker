@@ -114,8 +114,8 @@ export function Game({ user }) {
   );
   const [points, setPoints] = useState();
   const [ticket, setTicket] = useState("");
-  const [scores] = useCollection(
-    gameDoc.collection("scores").doc(game?.data().activeTask)
+  const [allScores, allScoresLoading] = useCollection(
+    gameDoc.collection("scores")
   );
   if (gameLoading || tasksLoading || membersLoading) {
     return null;
@@ -125,6 +125,10 @@ export function Game({ user }) {
     activeTaskId && !tasksLoading
       ? tasks.docs.find((task) => task.id === activeTaskId)
       : null;
+  const scores = allScoresLoading
+    ? null
+    : allScores.docs.find((doc) => doc.id === activeTaskId);
+
   const taskIndex = tasks.docs.findIndex((task) => task.id === activeTaskId);
   console.log(ticket);
   if (members.docs.find((doc) => doc.id === user.uid)) {
