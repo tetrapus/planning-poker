@@ -418,7 +418,7 @@ function Interface({ id, user }) {
     <div
       style={{
         ...(darkMode ? { filter: "invert(0.95)" } : {}),
-        ...{ display: "flex", flexGrow: 1 },
+        ...{ display: "flex", flexGrow: 1, background: "white" },
       }}
     >
       {id ? <Game id={id} user={user} /> : <CreateGameForm user={user} />}
