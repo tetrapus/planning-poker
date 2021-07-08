@@ -31,7 +31,7 @@ export function LoggedOutTemplate() {
   );
 }
 
-async function createGame(user) {
+async function createGame(user, freestyle) {
   const game = await firebase
     .firestore()
     .collection("game")
@@ -39,7 +39,7 @@ async function createGame(user) {
       owner: user.uid,
       name: `${user.displayName}'s Planning Poker`,
       activeTask: null,
-      deck: [1, 2, 3, 5, 8, 13, 21],
+      deck: freestyle ? null : [1, 2, 3, 5, 8, 13, 21],
       created: firebase.firestore.Timestamp.now(),
     });
   game.collection("members").doc(user.uid).set({
@@ -55,7 +55,10 @@ export function CreateGameForm({ user }) {
   return (
     <div style={{ margin: "auto" }}>
       <h1>Welcome, {user.displayName}!</h1>
-      <button onClick={() => createGame(user)}>Start a new game</button>
+      <button onClick={() => createGame(user, false)}>Start a new game</button>
+      <button className="Secondary" onClick={() => createGame(user, true)}>
+        Freestyle
+      </button>
       <h2>Join Game</h2>
       <div>
         {games
@@ -275,7 +278,26 @@ export function Game({ user }) {
                     );
                   })
                 ) : (
-                  <input placeholder="Score" pattern="\d+"></input>
+                  <input
+                    placeholder="Score"
+                    pattern="\d+"
+                    onKeyPress={async (e) => {
+                      if (
+                        e.key === "Enter" &&
+                        e.currentTarget.checkValidity()
+                      ) {
+                        game.ref
+                          .collection("scores")
+                          .doc(activeTaskId)
+                          .set(
+                            {
+                              [user.uid]: parseInt(e.currentTarget.value),
+                            },
+                            { merge: true }
+                          );
+                      }
+                    }}
+                  ></input>
                 )}
               </div>
               <div>
