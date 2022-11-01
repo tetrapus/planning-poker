@@ -194,7 +194,8 @@ export function Game({ user }) {
                         .runTransaction(async (transaction) => {
                           await transaction.set(
                             game.ref,
-                            ({ activeTask: doc.id }, { merge: true })
+                            { activeTask: doc.id },
+                            { merge: true }
                           );
                         });
                     }}
