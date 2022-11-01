@@ -32,20 +32,21 @@ export function LoggedOutTemplate() {
 }
 
 async function createGame(user, freestyle) {
-  const game = await firebase
-    .firestore()
-    .collection("game")
-    .add({
+  const id = await firebase.firestore().runTransaction(async (transaction) => {
+    const game = firebase.firestore().collection("game").doc();
+    await transaction.set(game, {
       owner: user.uid,
       name: `${user.displayName}'s Planning Poker`,
       activeTask: null,
       deck: freestyle ? null : [1, 2, 3, 5, 8, 13, 21],
       created: firebase.firestore.Timestamp.now(),
     });
-  game.collection("members").doc(user.uid).set({
-    name: user.displayName,
+    await transaction.set(game.collection("members").doc(user.uid), {
+      name: user.displayName,
+    });
+    return game.id;
   });
-  window.location.search = game.id;
+  window.location.search = id;
 }
 
 export function CreateGameForm({ user }) {
@@ -188,7 +189,14 @@ export function Game({ user }) {
                         : { color: "grey" }
                     }
                     onClick={() => {
-                      game.ref.set({ activeTask: doc.id }, { merge: true });
+                      firebase
+                        .firestore()
+                        .runTransaction(async (transaction) => {
+                          await transaction.set(
+                            game.ref,
+                            ({ activeTask: doc.id }, { merge: true })
+                          );
+                        });
                     }}
                     className="TaskEntry"
                   >
@@ -203,12 +211,17 @@ export function Game({ user }) {
               style={{ marginTop: 16 }}
               onKeyPress={async (e) => {
                 if (e.key === "Enter") {
-                  await gameDoc.collection("tasks").add({
-                    name: e.currentTarget.value,
-                    revealed: false,
-                    idx: tasks.docs.length,
-                  });
-                  setNewTask("");
+                  const value = e.currentTarget.value;
+                  await firebase
+                    .firestore()
+                    .runTransaction(async (transaction) => {
+                      await transaction.set(gameDoc.collection("tasks").doc(), {
+                        name: value,
+                        revealed: false,
+                        idx: tasks.docs.length,
+                      });
+                      setNewTask("");
+                    });
                 }
               }}
             ></input>
@@ -223,14 +236,21 @@ export function Game({ user }) {
                   if (e.key === "Enter" && e.currentTarget.checkValidity()) {
                     const tickets = await document.phabricatorGetEpic(ticket);
                     let idx = tasks.docs.length;
-                    for (const t of tickets) {
-                      await gameDoc.collection("tasks").add({
-                        name: `T${t.id}: ${t.fields.name}`,
-                        revealed: false,
-                        idx: idx++,
+                    await firebase
+                      .firestore()
+                      .runTransaction(async (transaction) => {
+                        for (const t of tickets) {
+                          await transaction.set(
+                            gameDoc.collection("tasks").doc(),
+                            {
+                              name: `T${t.id}: ${t.fields.name}`,
+                              revealed: false,
+                              idx: idx++,
+                            }
+                          );
+                        }
+                        setTicket("");
                       });
-                    }
-                    setTicket("");
                   }
                 }}
               ></input>
@@ -262,15 +282,17 @@ export function Game({ user }) {
                             : ""
                         }`}
                         onClick={() => {
-                          game.ref
-                            .collection("scores")
-                            .doc(activeTaskId)
-                            .set(
-                              {
-                                [user.uid]: card,
-                              },
-                              { merge: true }
-                            );
+                          firebase
+                            .firestore()
+                            .runTransaction(async (transaction) => {
+                              await transaction.set(
+                                game.ref.collection("scores").doc(activeTaskId),
+                                {
+                                  [user.uid]: card,
+                                },
+                                { merge: true }
+                              );
+                            });
                         }}
                       >
                         {card}
@@ -286,15 +308,17 @@ export function Game({ user }) {
                         e.key === "Enter" &&
                         e.currentTarget.checkValidity()
                       ) {
-                        game.ref
-                          .collection("scores")
-                          .doc(activeTaskId)
-                          .set(
-                            {
-                              [user.uid]: parseInt(e.currentTarget.value),
-                            },
-                            { merge: true }
-                          );
+                        await firebase
+                          .firestore()
+                          .runTransaction(async (transaction) => {
+                            await transaction.set(
+                              game.ref.collection("scores").doc(activeTaskId),
+                              {
+                                [user.uid]: parseInt(e.currentTarget.value),
+                              },
+                              { merge: true }
+                            );
+                          });
                       }
                     }}
                   ></input>
@@ -306,10 +330,15 @@ export function Game({ user }) {
                   <div>
                     <button
                       onClick={() => {
-                        activeTask.ref.set(
-                          { revealed: false },
-                          { merge: true }
-                        );
+                        firebase
+                          .firestore()
+                          .runTransaction(async (transaction) => {
+                            await transaction.set(
+                              activeTask.ref,
+                              { revealed: false },
+                              { merge: true }
+                            );
+                          });
                       }}
                       className="Secondary"
                     >
@@ -318,10 +347,15 @@ export function Game({ user }) {
                     <button
                       disabled={taskIndex === tasks.docs.length - 1}
                       onClick={() => {
-                        game.ref.set(
-                          { activeTask: tasks.docs[taskIndex + 1].id },
-                          { merge: true }
-                        );
+                        firebase
+                          .firestore()
+                          .runTransaction(async (transaction) => {
+                            await transaction.set(
+                              game.ref,
+                              { activeTask: tasks.docs[taskIndex + 1].id },
+                              { merge: true }
+                            );
+                          });
                       }}
                     >
                       Next
@@ -332,18 +366,31 @@ export function Game({ user }) {
                     <button
                       disabled={taskIndex === tasks.docs.length - 1}
                       onClick={() => {
-                        game.ref.set(
-                          { activeTask: tasks.docs[taskIndex + 1].id },
-                          { merge: true }
-                        );
+                        firebase
+                          .firestore()
+                          .runTransaction(async (transaction) => {
+                            await transaction.set(
+                              game.ref,
+                              { activeTask: tasks.docs[taskIndex + 1].id },
+                              { merge: true }
+                            );
+                          });
                       }}
                       className="Secondary"
                     >
                       Skip
                     </button>
                     <button
-                      onClick={() => {
-                        activeTask.ref.set({ revealed: true }, { merge: true });
+                      onClick={async () => {
+                        await firebase
+                          .firestore()
+                          .runTransaction(async (transaction) => {
+                            await transaction.set(
+                              activeTask.ref,
+                              { revealed: true },
+                              { merge: true }
+                            );
+                          });
                         setPoints(
                           scores
                             ? Math.round(
@@ -390,9 +437,15 @@ export function Game({ user }) {
           ) : (
             <button
               disabled={tasksLoading || !tasks.docs.length}
-              onClick={() =>
-                game.ref.set({ activeTask: tasks.docs[0].id }, { merge: true })
-              }
+              onClick={() => {
+                firebase.firestore().runTransaction(async (transaction) => {
+                  await transaction.set(
+                    game.ref,
+                    { activeTask: tasks.docs[0].id },
+                    { merge: true }
+                  );
+                });
+              }}
             >
               Start Game
             </button>
@@ -418,11 +471,16 @@ export function Game({ user }) {
         }}
       >
         <button
-          onClick={() =>
-            gameDoc.collection("members").doc(user.uid).set({
-              name: user.displayName,
-            })
-          }
+          onClick={() => {
+            firebase.firestore().runTransaction(async (transaction) => {
+              await transaction.set(
+                gameDoc.collection("members").doc(user.uid),
+                {
+                  name: user.displayName,
+                }
+              );
+            });
+          }}
           style={{ transform: "translateY(-100%)", margin: "auto" }}
         >
           Join Session
@@ -448,7 +506,13 @@ function Interface({ id, user }) {
         className="Secondary"
         style={{ position: "absolute", right: 0, bottom: 0, color: "grey" }}
         onClick={() => {
-          settingsDoc.set({ darkMode: !darkMode }, { merge: true });
+          firebase.firestore().runTransaction(async (transaction) => {
+            await transaction.set(
+              settingsDoc,
+              { darkMode: !darkMode },
+              { merge: true }
+            );
+          });
         }}
       >
         {darkMode ? "Light Mode" : "Dark Mode"}
