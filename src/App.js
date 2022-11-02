@@ -309,13 +309,14 @@ export function Game({ user }) {
                         e.key === "Enter" &&
                         e.currentTarget.checkValidity()
                       ) {
+                        const score = e.currentTarget.value;
                         await firebase
                           .firestore()
                           .runTransaction(async (transaction) => {
                             await transaction.set(
                               game.ref.collection("scores").doc(activeTaskId),
                               {
-                                [user.uid]: parseInt(e.currentTarget.value),
+                                [user.uid]: parseInt(score),
                               },
                               { merge: true }
                             );
