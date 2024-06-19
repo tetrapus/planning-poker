@@ -96,9 +96,9 @@ function ScoreState({ game, user, activeTask, members, scores }) {
       style={{
         display: "flex",
         flexDirection: "column",
-        width: "20vw",
         fontSize: "18px",
       }}
+      className="Column"
     >
       <div>
         {members.docs.map((doc) => {
@@ -143,6 +143,8 @@ function ScoreState({ game, user, activeTask, members, scores }) {
 }
 
 export function Game({ user }) {
+  const [playerStatus, setPlayerStatus] = useState("passive"); // can be passive, active or paused
+  const [overrideTask, setOverrideTask] = useState(null);
   const gameDoc = firebase
     .firestore()
     .collection("game")
@@ -163,7 +165,7 @@ export function Game({ user }) {
   if (gameLoading || tasksLoading || membersLoading) {
     return null;
   }
-  const activeTaskId = game.data().activeTask;
+  const activeTaskId = overrideTask ?? game.data().activeTask;
   const activeTask =
     activeTaskId && !tasksLoading
       ? tasks.docs.find((task) => task.id === activeTaskId)
@@ -176,8 +178,11 @@ export function Game({ user }) {
   console.log(ticket);
   if (members.docs.find((doc) => doc.id === user.uid)) {
     return (
-      <div style={{ display: "flex", backgroundColor: "#f0f0f0" }}>
-        <div style={{ width: "20vw" }}>
+      <div
+        style={{ display: "flex", backgroundColor: "#f0f0f0" }}
+        className="Outer"
+      >
+        <div style={{ textAlign: "start", margin: 8 }} className="Column">
           <h1>Tasks</h1>
           <div style={{ display: "flex", flexDirection: "column" }}>
             {tasks
@@ -189,6 +194,14 @@ export function Game({ user }) {
                         : { color: "grey" }
                     }
                     onClick={() => {
+                      if (playerStatus === "passive") {
+                        return;
+                      }
+                      if (playerStatus === "paused") {
+                        setOverrideTask(doc.id);
+                        return;
+                      }
+
                       firebase
                         .firestore()
                         .runTransaction(async (transaction) => {
@@ -199,7 +212,11 @@ export function Game({ user }) {
                           );
                         });
                     }}
-                    className="TaskEntry"
+                    className={
+                      playerStatus === "passive"
+                        ? "TaskEntry TaskEntry-passive"
+                        : "TaskEntry"
+                    }
                   >
                     {doc.data().name}
                   </div>
@@ -262,10 +279,10 @@ export function Game({ user }) {
           style={{
             display: "flex",
             flexDirection: "column",
-            width: "60vw",
             background: "white",
             height: "auto",
           }}
+          className="Content"
         >
           {activeTask ? (
             <>
@@ -327,87 +344,136 @@ export function Game({ user }) {
                 )}
               </div>
               <div>
-                {activeTask.data().revealed &&
-                game.data().owner === user.uid ? (
+                {playerStatus === "passive" ? (
                   <div>
-                    <button
-                      onClick={() => {
-                        firebase
-                          .firestore()
-                          .runTransaction(async (transaction) => {
-                            await transaction.set(
-                              activeTask.ref,
-                              { revealed: false },
-                              { merge: true }
-                            );
-                          });
-                      }}
-                      className="Secondary"
+                    You are voting.{" "}
+                    <span
+                      onClick={() => setPlayerStatus("active")}
+                      className="Anchor"
                     >
-                      Hide
-                    </button>
-                    <button
-                      disabled={taskIndex === tasks.docs.length - 1}
-                      onClick={() => {
-                        firebase
-                          .firestore()
-                          .runTransaction(async (transaction) => {
-                            await transaction.set(
-                              game.ref,
-                              { activeTask: tasks.docs[taskIndex + 1].id },
-                              { merge: true }
-                            );
-                          });
-                      }}
-                    >
-                      Next
-                    </button>
+                      Take over the session
+                    </span>
                   </div>
                 ) : (
                   <div>
-                    <button
-                      disabled={taskIndex === tasks.docs.length - 1}
-                      onClick={() => {
-                        firebase
-                          .firestore()
-                          .runTransaction(async (transaction) => {
-                            await transaction.set(
-                              game.ref,
-                              { activeTask: tasks.docs[taskIndex + 1].id },
-                              { merge: true }
-                            );
-                          });
-                      }}
-                      className="Secondary"
-                    >
-                      Skip
-                    </button>
-                    <button
-                      onClick={async () => {
-                        await firebase
-                          .firestore()
-                          .runTransaction(async (transaction) => {
-                            await transaction.set(
-                              activeTask.ref,
-                              { revealed: true },
-                              { merge: true }
-                            );
-                          });
-                        setPoints(
-                          scores
-                            ? Math.round(
-                                average(
-                                  Object.values(scores.data()).filter(
-                                    (score) => score !== "?"
+                    <div style={{ marginBottom: "16px" }}>
+                      You are {playerStatus === "paused" ? "not" : ""}{" "}
+                      controlling the session.{" "}
+                      {playerStatus === "active" ? (
+                        <span
+                          onClick={() => {
+                            setPlayerStatus("paused");
+                            setOverrideTask(null);
+                          }}
+                          className="Anchor"
+                        >
+                          Pause
+                        </span>
+                      ) : (
+                        <span
+                          onClick={() => {
+                            setPlayerStatus("active");
+                            setOverrideTask(null);
+                          }}
+                          className="Anchor"
+                        >
+                          Resume
+                        </span>
+                      )}{" "}
+                      or{" "}
+                      <span
+                        onClick={() => {
+                          setPlayerStatus("passive");
+                          setOverrideTask(null);
+                        }}
+                        className="Anchor"
+                      >
+                        Abdicate
+                      </span>
+                    </div>
+                    {activeTask.data().revealed &&
+                    game.data().owner === user.uid ? (
+                      <div>
+                        <button
+                          onClick={() => {
+                            firebase
+                              .firestore()
+                              .runTransaction(async (transaction) => {
+                                await transaction.set(
+                                  activeTask.ref,
+                                  { revealed: false },
+                                  { merge: true }
+                                );
+                              });
+                          }}
+                          className="Secondary"
+                        >
+                          Hide
+                        </button>
+                        <button
+                          disabled={taskIndex === tasks.docs.length - 1}
+                          onClick={() => {
+                            firebase
+                              .firestore()
+                              .runTransaction(async (transaction) => {
+                                await transaction.set(
+                                  game.ref,
+                                  { activeTask: tasks.docs[taskIndex + 1].id },
+                                  { merge: true }
+                                );
+                              });
+                          }}
+                        >
+                          Next
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <button
+                          disabled={taskIndex === tasks.docs.length - 1}
+                          onClick={() => {
+                            firebase
+                              .firestore()
+                              .runTransaction(async (transaction) => {
+                                await transaction.set(
+                                  game.ref,
+                                  { activeTask: tasks.docs[taskIndex + 1].id },
+                                  { merge: true }
+                                );
+                              });
+                          }}
+                          className="Secondary"
+                        >
+                          Skip
+                        </button>
+                        <button
+                          onClick={async () => {
+                            await firebase
+                              .firestore()
+                              .runTransaction(async (transaction) => {
+                                await transaction.set(
+                                  activeTask.ref,
+                                  { revealed: true },
+                                  { merge: true }
+                                );
+                              });
+                            setPoints(
+                              scores
+                                ? Math.round(
+                                    average(
+                                      Object.values(scores.data()).filter(
+                                        (score) => score !== "?"
+                                      )
+                                    )
                                   )
-                                )
-                              )
-                            : 0
-                        );
-                      }}
-                    >
-                      Reveal
-                    </button>
+                                : 0
+                            );
+                          }}
+                        >
+                          Reveal
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
                 {document.phabricatorSetPoints &&

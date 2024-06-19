@@ -93,6 +93,10 @@ button:active {
   cursor: pointer;
 }
 
+.TaskEntry-passive {
+  cursor: default;
+}
+
 input {
   font-size: 18px;
   border: 1px solid #ccc;
@@ -102,4 +106,34 @@ input {
 
 input:invalid {
   border: 1px solid red;
+}
+
+.Column {
+  width: 20vw;
+}
+
+.Content {
+  width: 60vw;
+}
+
+@media (max-width: 500px) {
+  .Outer {
+    flex-direction: column-reverse;
+  }
+
+  .Column {
+    width: auto;
+  }
+
+  .Content {
+    width: auto;
+    flex-grow: 1;
+  }
+
+}
+
+
+.Anchor {
+  color: #007fed;
+  cursor: pointer;
 }
