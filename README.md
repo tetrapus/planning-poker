@@ -1,70 +1,105 @@
-# Getting Started with Create React App
+# Planning Poker App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A web application for collaborative estimation using the Planning Poker technique. Built with React and Firebase.
 
-## Available Scripts
+## Description
 
-In the project directory, you can run:
+This web application facilitates team estimation sessions using the Planning Poker method. It allows distributed teams to collaboratively estimate task complexity or effort in real-time. Key features include:
 
-### `yarn start`
+*   Real-time updates for seamless collaboration.
+*   User authentication via Firebase.
+*   Selectable card decks (e.g., Fibonacci, T-shirt sizes).
+*   Ability for a moderator to control the estimation flow (reveal cards, start new rounds).
+*   Display of estimation results and consensus.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Technologies Used
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+*   **Frontend:** React (using Create React App), react-firebase-hooks
+*   **Backend/Database:** Firebase (Realtime Database/Firestore, Authentication)
+*   **Styling:** Plain CSS / CSS Modules (Modify if using a specific library like Material UI, Tailwind CSS, etc.)
+*   **Testing:** React Testing Library, Jest
 
-### `yarn test`
+## Getting Started
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
 
-### `yarn build`
+*   Node.js (v14 or later recommended)
+*   npm or yarn
+*   Firebase account and project setup
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Installation & Setup
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1.  **Clone the repository:**
+    ```bash
+    git clone git@github.com:tetrapus/planning-poker.git
+    cd planning-poker
+    ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2.  **Install dependencies:**
+    ```bash
+    yarn install
+    # or
+    # npm install
+    ```
 
-### `yarn eject`
+3.  **Firebase Configuration:**
+    *   Create a Firebase project at [https://console.firebase.google.com/](https://console.firebase.google.com/).
+    *   Enable Firebase Authentication (e.g., Email/Password, Google Sign-in).
+    *   Enable Firestore or Realtime Database.
+    *   Obtain your Firebase project configuration keys (apiKey, authDomain, etc.).
+    *   Create a `.env.local` file in the project root (`planning-poker/`) and add your Firebase configuration:
+        ```plaintext
+        REACT_APP_FIREBASE_API_KEY=YOUR_API_KEY
+        REACT_APP_FIREBASE_AUTH_DOMAIN=YOUR_AUTH_DOMAIN
+        REACT_APP_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID
+        REACT_APP_FIREBASE_STORAGE_BUCKET=YOUR_STORAGE_BUCKET
+        REACT_APP_FIREBASE_MESSAGING_SENDER_ID=YOUR_MESSAGING_SENDER_ID
+        REACT_APP_FIREBASE_APP_ID=YOUR_APP_ID
+        # Add database URL if using Realtime Database
+        # REACT_APP_FIREBASE_DATABASE_URL=YOUR_DATABASE_URL
+        ```
+        *(Remember to add `.env.local` to your `.gitignore` if it's not already there - which it is in this case)*
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Running the Application
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+yarn start
+# or
+# npm start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+This runs the app in development mode. Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### Building for Production
 
-## Learn More
+```bash
+yarn build
+# or
+# npm run build
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Builds the app for production to the `build` folder.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Running Tests
 
-### Code Splitting
+```bash
+yarn test
+# or
+# npm test
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Launches the test runner in interactive watch mode.
 
-### Analyzing the Bundle Size
+## Contributing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Contributions are welcome! If you have suggestions for improvements or encounter bugs, please open an issue on the GitHub repository. Pull requests are also appreciated. Please ensure that any code changes are accompanied by relevant tests.
 
-### Making a Progressive Web App
+## License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+This project is licensed under the MIT License - see the LICENSE file for details. (Note: You should add a `LICENSE` file to the repository containing the full text of the MIT License or your chosen license).
 
-### Advanced Configuration
+## Acknowledgements
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `yarn build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+*   Create React App
+*   Firebase
+*   [Add any other libraries or resources you want to acknowledge]

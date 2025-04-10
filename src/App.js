@@ -38,7 +38,7 @@ async function createGame(user, freestyle) {
       owner: user.uid,
       name: `${user.displayName}'s Planning Poker`,
       activeTask: null,
-      deck: freestyle ? null : [1, 2, 3, 5, 8, 13, 21],
+      deck: freestyle ? null : [1, 2, 3, 5, 8, 13, 21, 34, 55],
       created: firebase.firestore.Timestamp.now(),
     });
     await transaction.set(game.collection("members").doc(user.uid), {

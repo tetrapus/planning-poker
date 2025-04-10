@@ -1,7 +1,16 @@
 {
   "name": "planning-poker",
   "version": "0.1.0",
+  "description": "Real-time Planning Poker application for collaborative team estimation using React and Firebase.",
   "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tetrapus/planning-poker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tetrapus/planning-poker/issues"
+  },
   "homepage": "./",
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.4",
